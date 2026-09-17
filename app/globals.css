@@ -1,28 +1,18 @@
-'use client'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { Globe2, Search, Menu, X, Compass, Users, Boxes, FileText, UserCircle } from 'lucide-react'
-import { useState } from 'react'
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-const nav = [
-  ['/discover','Discover','Discover'], ['/community','Community','Community'], ['/source','Source','Source'], ['/buyers','Buyers','Buyers'], ['/stories','Stories','Stories'], ['/about','About','About']
-]
-export function SiteShell({children}:{children:React.ReactNode}) {
-  const [open,setOpen]=useState(false); const path=usePathname()
-  return <div className="min-h-screen bg-[#f8fbfd] text-[#123047]">
-    <header className="sticky top-0 z-50 border-b border-sky-100/80 bg-white/90 backdrop-blur-xl">
-      <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-5 lg:px-8">
-        <Link href="/" className="flex items-center gap-3" onClick={()=>setOpen(false)}>
-          <span className="grid h-11 w-11 place-items-center rounded-2xl border border-sky-200 bg-white text-sm font-black tracking-tighter shadow-[0_9px_20px_rgba(14,116,144,.12)]">SL</span>
-          <span><span className="block text-lg font-black tracking-tight">SLorigins</span><span className="block text-[10px] font-semibold uppercase tracking-[.22em] text-sky-600">Discover. Verify. Connect.</span></span>
-        </Link>
-        <nav className="hidden items-center gap-1 lg:flex">{nav.map(([href,label])=><Link key={href} href={href} className={`rounded-xl px-3 py-2 text-sm font-semibold transition ${path===href?'bg-sky-50 text-sky-700':'text-slate-600 hover:bg-slate-50 hover:text-sky-700'}`}>{label}</Link>)}</nav>
-        <div className="hidden items-center gap-2 lg:flex"><Link href="/search" className="rounded-xl p-2.5 text-slate-500 hover:bg-slate-50"><Search size={19}/></Link><Link href="/auth" className="rounded-xl border border-sky-200 bg-white px-4 py-2 text-sm font-bold text-sky-700 shadow-sm hover:-translate-y-0.5">Join SLorigins</Link></div>
-        <button className="rounded-xl p-2 lg:hidden" onClick={()=>setOpen(!open)} aria-label="Menu">{open?<X/>:<Menu/>}</button>
-      </div>
-      {open && <div className="border-t border-sky-100 bg-white px-5 pb-5 lg:hidden">{nav.map(([href,label])=><Link key={href} href={href} onClick={()=>setOpen(false)} className="block border-b border-slate-100 py-3 text-sm font-semibold">{label}</Link>)}<Link href="/auth" onClick={()=>setOpen(false)} className="mt-4 block rounded-xl bg-sky-600 px-4 py-3 text-center text-sm font-bold text-white">Join SLorigins</Link></div>}
-    </header>
-    <main>{children}</main>
-    <footer className="mt-20 border-t border-sky-100 bg-white"><div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 md:grid-cols-4 lg:px-8"><div className="md:col-span-2"><div className="flex items-center gap-2"><span className="grid h-9 w-9 place-items-center rounded-xl border border-sky-200 text-xs font-black">SL</span><span className="font-black">SLorigins</span></div><p className="mt-4 max-w-md text-sm leading-6 text-slate-500">A community-powered ecosystem for discovering Sierra Leone’s people, products, materials and stories—and connecting verified opportunities with the world.</p></div><div><div className="text-sm font-bold">Explore</div><div className="mt-3 grid gap-2 text-sm text-slate-500"><Link href="/discover">Discover</Link><Link href="/community">Community</Link><Link href="/source">Source</Link><Link href="/stories">Stories</Link></div></div><div><div className="text-sm font-bold">Company</div><div className="mt-3 grid gap-2 text-sm text-slate-500"><Link href="/buyers">Buyer desk</Link><Link href="/verification">Verification</Link><Link href="/sustainability">Sustainability</Link><Link href="/about">About</Link></div></div></div><div className="border-t border-slate-100 py-5 text-center text-xs text-slate-400">© 2026 SLorigins · Built around Sierra Leone, open to the world.</div></footer>
-  </div>
-}
+:root{color-scheme:light;--ink:#123047;--muted:#5d7585;--sky:#dff3ff;--sky-2:#bfe7ff;--accent:#1998d7;--line:rgba(24,84,112,.12);--shadow:0 22px 60px rgba(34,91,120,.12)}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:linear-gradient(180deg,#fff 0,#f7fbfd 100%);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+a{color:inherit;text-decoration:none}button,input,textarea,select{font:inherit}
+.hero{min-height:100vh;padding:48px 20px;display:grid;place-items:center;background:radial-gradient(circle at 20% 10%,rgba(164,224,255,.45),transparent 32%),radial-gradient(circle at 85% 80%,rgba(215,243,255,.75),transparent 30%)}
+.hero-card{width:min(1120px,100%);padding:64px;border:1px solid rgba(68,154,196,.14);border-radius:36px;background:rgba(255,255,255,.86);backdrop-filter:blur(24px);box-shadow:var(--shadow);position:relative;overflow:hidden}
+.hero-card:before{content:"";position:absolute;inset:auto -10% -40% 35%;height:70%;background:radial-gradient(circle,rgba(89,184,228,.18),transparent 68%);pointer-events:none}
+.depth-card{transform:translateZ(0);transition:transform .3s ease,box-shadow .3s ease}.depth-card:hover{transform:translateY(-6px);box-shadow:0 30px 80px rgba(34,91,120,.17)}
+.brand-mark{width:58px;height:58px;border-radius:18px;display:grid;place-items:center;background:linear-gradient(145deg,#fff,#d9f2ff);border:1px solid rgba(25,152,215,.18);box-shadow:8px 8px 20px rgba(57,127,158,.12),-5px -5px 14px #fff;font-weight:900;font-size:20px;margin-bottom:26px}
+.eyebrow{font-size:12px;letter-spacing:.16em;font-weight:800;color:#1c83b8}.hero h1{position:relative;max-width:800px;font-size:clamp(44px,7vw,82px);line-height:.98;letter-spacing:-.055em;margin:18px 0}.lead{position:relative;max-width:760px;font-size:20px;line-height:1.65;color:var(--muted)}
+.hero-actions{position:relative;display:flex;gap:14px;flex-wrap:wrap;margin-top:32px}.button{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 20px;border-radius:16px;border:1px solid var(--line);font-weight:700}.button.primary{color:white;background:linear-gradient(145deg,#2aa8df,#127fb7);box-shadow:0 14px 30px rgba(25,152,215,.22)}.button.secondary{background:#fff}
+.highlight-grid{position:relative;margin-top:54px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.mini-card{padding:22px;border-radius:22px;border:1px solid var(--line);background:linear-gradient(145deg,rgba(255,255,255,.95),rgba(234,248,255,.88));display:grid;gap:9px}.mini-card strong{font-size:18px}.mini-card span{color:var(--muted);line-height:1.5}
+@media(max-width:760px){.hero{padding:18px}.hero-card{padding:30px 22px;border-radius:28px}.highlight-grid{grid-template-columns:1fr}.lead{font-size:17px}.hero h1{font-size:clamp(42px,16vw,64px)}}
