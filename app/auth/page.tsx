@@ -1,42 +1,56 @@
 'use client'
 
-import { FormEvent, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { FormEvent, useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
+const steps = [
+  { title: 'About you', fields: ['fullName', 'role', 'occupation'] },
+  { title: 'Your place', fields: ['country', 'region', 'district', 'chiefdom'] },
+  { title: 'Account', fields: ['email', 'password'] },
+] as const
+
 export default function AuthPage() {
-  const router = useRouter()
-  const [mode, setMode] = useState<'signin' | 'signup'>('signup')
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [role, setRole] = useState('Contributor')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const router = useRouter(); const search = useSearchParams()
+  const next = search.get('next') || '/home'
+  const [mode, setMode] = useState<'signup' | 'signin'>('signup')
+  const [step, setStep] = useState(1)
+  const [form, setForm] = useState({ fullName: '', role: 'member', occupation: '', country: 'Sierra Leone', region: '', district: '', chiefdom: '', email: '', password: '' })
+  const [message, setMessage] = useState(''); const [loading, setLoading] = useState(false)
+  const set = (key: keyof typeof form, value: string) => setForm(v => ({ ...v, [key]: value }))
+  const valid = useMemo(() => {
+    if (mode === 'signin') return !!form.email && form.password.length >= 8
+    if (step === 1) return !!form.fullName && !!form.role && !!form.occupation
+    if (step === 2) return !!form.country && !!form.region && !!form.district
+    return /.+@.+\..+/.test(form.email) && form.password.length >= 8
+  }, [form, mode, step])
 
   async function submit(e: FormEvent) {
-    e.preventDefault(); setError(''); setLoading(true)
-    const supabase = createClient()
-    const result = mode === 'signup'
-      ? await supabase.auth.signUp({ email, password, options: { data: { display_name: name, role } } })
-      : await supabase.auth.signInWithPassword({ email, password })
-    setLoading(false)
-    if (result.error) return setError(result.error.message)
-    if (mode === 'signup' && !result.data.session) {
-      setError('Account created. Check your email to verify it, then sign in.')
-      setMode('signin')
-      return
+    e.preventDefault(); setMessage('')
+    if (mode === 'signup' && step < 3) { setStep(s => s + 1); return }
+    setLoading(true); const supabase = createClient()
+    if (mode === 'signup') {
+      const { data, error } = await supabase.auth.signUp({ email: form.email, password: form.password, options: { data: { display_name: form.fullName, role: form.role, occupation: form.occupation, country: form.country, region: form.region, district: form.district, chiefdom: form.chiefdom } } })
+      setLoading(false)
+      if (error) return setMessage(error.message)
+      if (!data.session) { setMessage('Check your email to verify your account. After verification, you will return here to finish your profile.'); setMode('signin'); setStep(1); return }
+      router.push('/profile/setup?next=' + encodeURIComponent(next)); return
     }
-    router.push('/home')
-    router.refresh()
+    const { data, error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password })
+    setLoading(false)
+    if (error) return setMessage(error.message)
+    if (!data.user?.email_confirmed_at) return setMessage('Please verify your email before signing in.')
+    router.push(next); router.refresh()
   }
 
   async function google() {
-    setError('')
-    const supabase = createClient()
-    const { error: authError } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/auth/callback` } })
-    if (authError) setError(authError.message)
+    const supabase = createClient(); setMessage('')
+    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` } })
+    if (error) setMessage(error.message)
   }
 
-  return <main className="mx-auto max-w-6xl px-5 py-12 lg:px-8"><div className="grid gap-10 lg:grid-cols-[1.1fr_.9fr] lg:items-center"><div><p className="text-sm font-semibold text-slate-500">SLorigins account</p><h1 className="mt-3 max-w-xl text-3xl font-semibold tracking-tight md:text-4xl">Join the community.</h1><p className="mt-4 max-w-xl text-base leading-7 text-slate-600">Create your profile with your name, role, place and optional photo. Your community home opens after you sign in.</p></div><form onSubmit={submit} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8"><div className="flex rounded-lg bg-slate-50 p-1"><button type="button" className={`flex-1 rounded-md px-3 py-2 text-sm ${mode==='signup'?'bg-white shadow-sm font-semibold':''}`} onClick={()=>setMode('signup')}>Create account</button><button type="button" className={`flex-1 rounded-md px-3 py-2 text-sm ${mode==='signin'?'bg-white shadow-sm font-semibold':''}`} onClick={()=>setMode('signin')}>Sign in</button></div>{mode==='signup'&&<><label className="mt-6 block text-sm font-medium">Full name<input value={name} onChange={e=>setName(e.target.value)} required className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-slate-950"/></label><label className="mt-4 block text-sm font-medium">Role<select value={role} onChange={e=>setRole(e.target.value)} className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-3"><option>Contributor</option><option>Maker / producer</option><option>Buyer</option><option>Researcher</option></select></label></>}<label className="mt-4 block text-sm font-medium">Email<input type="email" value={email} onChange={e=>setEmail(e.target.value)} required className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-slate-950"/></label><label className="mt-4 block text-sm font-medium">Password<input type="password" minLength={8} value={password} onChange={e=>setPassword(e.target.value)} required className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-slate-950"/></label>{error&&<p className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">{error}</p>}<button disabled={loading} className="mt-6 w-full rounded-lg bg-slate-950 px-4 py-3 font-semibold text-white disabled:opacity-50">{loading?'Please wait…':mode==='signup'?'Create account':'Sign in'}</button><button type="button" onClick={google} className="mt-3 w-full rounded-lg border border-slate-300 px-4 py-3 font-semibold">Continue with Google</button></form></div></main>
+  return <main className="mx-auto max-w-5xl px-5 py-12 lg:px-8"><div className="max-w-xl"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">SLorigins account</p><h1 className="mt-3 text-3xl font-semibold tracking-tight text-neutral-900">Join the community</h1><p className="mt-2 text-sm leading-6 text-neutral-500">A short three-step setup creates the profile used across your community home.</p></div><div className="mt-8 max-w-xl"><div className="mb-6 flex items-center gap-2 text-xs text-neutral-400">{steps.map((s,i)=><div key={s.title} className={`flex items-center gap-2 ${i+1 === step ? 'text-neutral-900' : ''}`}><span className={`grid h-6 w-6 place-items-center rounded-full border ${i+1 <= step ? 'border-neutral-900 bg-neutral-900 text-white' : 'border-neutral-300'}`}>{i+1}</span>{s.title}</div>)}</div><div className="mb-5 flex gap-2"><button type="button" onClick={()=>{setMode('signup');setStep(1);setMessage('')}} className={`rounded-lg px-3 py-2 text-sm ${mode==='signup'?'bg-neutral-900 text-white':'border border-neutral-200'}`}>Create account</button><button type="button" onClick={()=>{setMode('signin');setMessage('')}} className={`rounded-lg px-3 py-2 text-sm ${mode==='signin'?'bg-neutral-900 text-white':'border border-neutral-200'}`}>Sign in</button></div><form onSubmit={submit} className="space-y-5">{mode==='signup' && step===1 && <><Field label="Full name" value={form.fullName} onChange={v=>set('fullName',v)} /><Field label="What do you do?" value={form.occupation} onChange={v=>set('occupation',v)} placeholder="Maker, farmer, student, researcher…"/><Select label="Community role" value={form.role} onChange={v=>set('role',v)} options={[['member','Community member'],['contributor','Contributor'],['buyer','Buyer'],['researcher','Researcher'],['maker','Maker / producer']]}/></>}{mode==='signup' && step===2 && <><Field label="Country" value={form.country} onChange={v=>set('country',v)} /><Field label="Region / province" value={form.region} onChange={v=>set('region',v)} /><Field label="District" value={form.district} onChange={v=>set('district',v)} /><Field label="Chiefdom / town" value={form.chiefdom} onChange={v=>set('chiefdom',v)} /></>}{(mode==='signin' || step===3) && <><Field label="Email" type="email" value={form.email} onChange={v=>set('email',v)} /><Field label="Password" type="password" value={form.password} onChange={v=>set('password',v)} placeholder="At least 8 characters"/></>}{message && <div className="text-sm leading-6 text-neutral-600">{message}</div>}<div className="flex flex-wrap gap-2">{mode==='signup' && step>1 && <button type="button" onClick={()=>setStep(s=>s-1)} className="rounded-lg border border-neutral-200 px-4 py-3 text-sm font-semibold">Back</button>}<button disabled={!valid || loading} className="rounded-lg bg-neutral-900 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40">{loading ? 'Please wait…' : mode==='signin' ? 'Sign in' : step<3 ? 'Continue' : 'Create account'}</button></div></form>{mode==='signup' && <><div className="my-5 h-px bg-neutral-200"/><button type="button" onClick={google} className="w-full rounded-lg border border-neutral-200 px-4 py-3 text-sm font-semibold">Continue with Google</button></>}</div></main>
 }
+
+function Field({label,value,onChange,placeholder,type='text'}:{label:string;value:string;onChange:(v:string)=>void;placeholder?:string;type?:string}){return <label className="grid gap-2 text-sm font-medium text-neutral-900">{label}<input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} className="border-b border-neutral-300 bg-transparent px-0 py-3 outline-none placeholder:text-neutral-400 focus:border-neutral-900" required/></label>}
+function Select({label,value,onChange,options}:{label:string;value:string;onChange:(v:string)=>void;options:string[][]}){return <label className="grid gap-2 text-sm font-medium text-neutral-900">{label}<select value={value} onChange={e=>onChange(e.target.value)} className="rounded-lg border border-neutral-200 bg-white px-3 py-3 outline-none focus:border-neutral-900">{options.map(([v,t])=><option key={v} value={v}>{t}</option>)}</select></label>}
