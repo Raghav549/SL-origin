@@ -1,0 +1,10 @@
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
+
+export default async function ProfilePage(){
+  const s=await createClient(); const {data:{user}}=await s.auth.getUser();
+  if(!user) return <main className="mx-auto max-w-3xl px-5 py-16"><h1 className="text-2xl font-semibold">Your profile</h1><p className="mt-2 text-sm text-neutral-500">Sign in to view your profile.</p><Link href="/auth?next=/profile" className="mt-5 inline-block rounded-lg bg-neutral-900 px-4 py-2 text-sm font-semibold text-white">Sign in</Link></main>
+  const {data:p}=await s.from('profiles').select('*').eq('id',user.id).maybeSingle();
+  return <main className="mx-auto max-w-3xl px-5 py-12 lg:px-8"><div className="flex items-start gap-5 border-b border-neutral-200 pb-8"><img src={p?.avatar_url||'/images/avatar-placeholder.svg'} alt="" className="h-20 w-20 rounded-full object-cover bg-neutral-100"/><div><h1 className="text-2xl font-semibold">{p?.display_name||user.email}</h1><p className="mt-1 text-sm text-neutral-500">{p?.occupation||'Community member'}{p?.region?` · ${p.region}`:''}</p><p className="mt-3 max-w-xl text-sm leading-6 text-neutral-600">{p?.bio||'Tell the community what you make, study, source or care about.'}</p></div></div><div className="grid gap-0 divide-y divide-neutral-200 text-sm"><Row label="Username" value={p?.username||'—'}/><Row label="Location" value={[p?.district,p?.chiefdom,p?.region,p?.country].filter(Boolean).join(', ')||'—'}/><Row label="Language" value={p?.preferred_language||'en'}/><Row label="Verification" value={p?.verification_status||'unverified'}/></div><div className="mt-7 flex gap-2"><Link href="/profile/setup?next=/profile" className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-semibold text-white">Edit profile</Link><Link href="/settings" className="rounded-lg border border-neutral-200 px-4 py-2 text-sm font-semibold">Settings</Link></div></main>
+}
+function Row({label,value}:{label:string;value:string}){return <div className="grid grid-cols-[120px_1fr] gap-4 py-4"><span className="text-neutral-500">{label}</span><span>{value}</span></div>}
