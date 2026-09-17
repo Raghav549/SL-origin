@@ -1,3 +1,41 @@
-import Link from 'next/link'
-import { Search, MapPinned, SlidersHorizontal } from 'lucide-react'
-export default function Regions(){const regions=['Western Area','Eastern Province','Northern Province','Southern Province','North West Province'];return <section className="mx-auto max-w-6xl px-5 py-12 lg:px-8"><div className="max-w-3xl"><div className="text-xs font-black uppercase tracking-[.22em] text-sky-600">Regions</div><h1 className="mt-2 text-4xl font-black tracking-tight md:text-6xl">Explore by place.</h1><p className="mt-4 leading-7 text-slate-500">A geographic layer for discoveries, contributors and sourcing context. District-level data can be added as the community grows.</p></div><div className="mt-8 grid gap-4 md:grid-cols-2"><div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 md:col-span-2"><Search className="text-slate-400" size={18}/><input className="w-full outline-none text-sm" placeholder="Search region or district"/><button className="rounded-xl p-2 hover:bg-slate-50"><SlidersHorizontal size={17}/></button></div>{regions.map((r,i)=><Link href={`/regions/${i+1}`} key={r} className="group overflow-hidden rounded-[1.6rem] border border-sky-100 bg-white shadow-sm hover:-translate-y-0.5"><div className="h-36 bg-gradient-to-br from-sky-100 via-white to-cyan-50 grid place-items-center"><MapPinned className="text-sky-300" size={46}/></div><div className="p-5"><div className="text-lg font-black">{r}</div><div className="mt-1 text-xs text-slate-400">Explore discoveries, people and stories</div><div className="mt-4 text-sm font-bold text-sky-700">Open region →</div></div></Link>)}</div></section>}
+'use client'
+
+import { FormEvent, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+
+export default function AuthPage() {
+  const router = useRouter()
+  const [mode, setMode] = useState<'signin' | 'signup'>('signup')
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [role, setRole] = useState('Contributor')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function submit(e: FormEvent) {
+    e.preventDefault(); setError(''); setLoading(true)
+    const supabase = createClient()
+    const result = mode === 'signup'
+      ? await supabase.auth.signUp({ email, password, options: { data: { display_name: name, role } } })
+      : await supabase.auth.signInWithPassword({ email, password })
+    setLoading(false)
+    if (result.error) return setError(result.error.message)
+    if (mode === 'signup' && !result.data.session) {
+      setError('Account created. Check your email to verify it, then sign in.')
+      setMode('signin')
+      return
+    }
+    router.push('/home')
+    router.refresh()
+  }
+
+  async function google() {
+    setError(''); const supabase = createClient()
+    const { error: authError } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/auth/callback` } })
+    if (authError) setError(authError.message)
+  }
+
+  return <main className="mx-auto max-w-6xl px-5 py-12 lg:px-8"><div className="grid gap-10 lg:grid-cols-[1.1fr_.9fr] lg:items-center"><div><p className="text-sm font-semibold text-slate-500">SLorigins account</p><h1 className="mt-3 max-w-xl text-4xl font-semibold tracking-tight md:text-5xl">Join the community and make your origin part of the record.</h1><p className="mt-5 max-w-xl text-lg leading-8 text-slate-600">Create a profile with your name, photo, role and place. After verification, your home becomes the community feed.</p></div><form onSubmit={submit} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8"><div className="flex rounded-lg bg-slate-50 p-1"><button type="button" className={`flex-1 rounded-md px-3 py-2 text-sm ${mode==='signup'?'bg-white shadow-sm font-semibold':''}`} onClick={()=>setMode('signup')}>Create account</button><button type="button" className={`flex-1 rounded-md px-3 py-2 text-sm ${mode==='signin'?'bg-white shadow-sm font-semibold':''}`} onClick={()=>setMode('signin')}>Sign in</button></div>{mode==='signup'&&<><label className="mt-6 block text-sm font-medium">Full name<input value={name} onChange={e=>setName(e.target.value)} required className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-slate-950"/></label><label className="mt-4 block text-sm font-medium">I am a<select value={role} onChange={e=>setRole(e.target.value)} className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-3"><option>Contributor</option><option>Maker / producer</option><option>Buyer</option><option>Researcher</option></select></label></>}<label className="mt-4 block text-sm font-medium">Email<input type="email" value={email} onChange={e=>setEmail(e.target.value)} required className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-slate-950"/></label><label className="mt-4 block text-sm font-medium">Password<input type="password" minLength={8} value={password} onChange={e=>setPassword(e.target.value)} required className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-slate-950"/></label>{error&&<p className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">{error}</p>}<button disabled={loading} className="mt-6 w-full rounded-lg bg-slate-950 px-4 py-3 font-semibold text-white disabled:opacity-50">{loading?'Please wait…':mode==='signup'?'Create account':'Sign in'}</button><button type="button" onClick={google} className="mt-3 w-full rounded-lg border border-slate-300 px-4 py-3 font-semibold">Continue with Google</button></form></div></main>
+}

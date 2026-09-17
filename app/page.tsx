@@ -1,23 +1,5 @@
 import Link from 'next/link'
 
-const highlights = [
-  {title:'Discover',href:'/discoveries',text:'Explore verified Sierra Leone origins, materials and products.'},
-  {title:'Community',href:'/community',text:'Meet local contributors and follow new discoveries.'},
-  {title:'Buyer desk',href:'/buyers',text:'Post demand and connect with verified sourcing workflows.'},
-]
-
 export default function Home(){
-  return <main className="hero">
-    <div className="hero-card depth-card">
-      <div className="brand-mark">SL</div>
-      <span className="eyebrow">SIERRA LEONE · GLOBAL ORIGINS</span>
-      <h1>Discover what the world has not seen yet.</h1>
-      <p className="lead">SLorigins connects Sierra Leonean communities, verified discoveries and international buyers through one transparent ecosystem.</p>
-      <div className="hero-actions">
-        <Link className="button primary" href="/discoveries">Explore discoveries</Link>
-        <Link className="button secondary" href="/community">Join the community</Link>
-      </div>
-      <div className="highlight-grid">{highlights.map(item=><Link key={item.href} href={item.href} className="mini-card depth-card"><strong>{item.title}</strong><span>{item.text}</span></Link>)}</div>
-    </div>
-  </main>
+  return <main className="mx-auto max-w-7xl px-5 py-16 lg:px-8"><section className="max-w-4xl"><p className="text-sm font-semibold text-slate-500">Sierra Leone · global origins</p><h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl">Discover local knowledge. Connect it to the world.</h1><p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">SLorigins is a community-led platform for discoveries, people, places and responsible sourcing.</p><div className="mt-7 flex flex-wrap gap-3"><Link className="rounded-lg bg-slate-950 px-5 py-3 text-sm font-semibold text-white" href="/discoveries">Explore</Link><Link className="rounded-lg border border-slate-300 px-5 py-3 text-sm font-semibold" href="/auth">Join the community</Link></div></section><section className="mt-16 grid gap-4 md:grid-cols-3">{[['01','Discover','Local products, materials, crafts and stories.','/discoveries'],['02','Connect','People, regions and field knowledge in one place.','/community'],['03','Source responsibly','Transparent verification and buyer demand.','/buyers']].map(([n,t,d,h])=><Link href={h} key={n} className="rounded-2xl border border-slate-200 p-6 hover:border-slate-400"><div className="text-xs font-semibold text-slate-400">{n}</div><h2 className="mt-6 text-xl font-semibold">{t}</h2><p className="mt-2 text-sm leading-6 text-slate-600">{d}</p></Link>)}</section></main>
 }
