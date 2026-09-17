@@ -3,8 +3,8 @@ import type { Metadata } from 'next'
 import { SiteShell } from '@/components/site-shell'
 
 export const metadata: Metadata = {
-  title: 'SLorigins — Sierra Leone, discovered and connected',
-  description: 'A community-powered discovery and sourcing ecosystem connecting Sierra Leone with global buyers.',
+  title: 'SLorigins — Discover Sierra Leone with the people who know it',
+  description: 'A community-powered Sierra Leone discovery, knowledge and responsible sourcing ecosystem.',
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
