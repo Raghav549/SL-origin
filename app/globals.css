@@ -6,14 +6,6 @@ body { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
 a { color: inherit; text-decoration: none; }
 button, input, textarea, select { font: inherit; }
 
-.sl-depth {
-  box-shadow: 7px 7px 16px rgba(0,0,0,.09), -5px -5px 12px rgba(255,255,255,.95);
-}
-.sl-depth-inset {
-  box-shadow: inset 2px 2px 6px rgba(0,0,0,.035), inset -2px -2px 6px rgba(255,255,255,.95);
-}
-.sl-surface {
-  border: 1px solid #e9e9e9;
-  background: #fff;
-  box-shadow: 8px 8px 20px rgba(0,0,0,.055), -5px -5px 14px rgba(255,255,255,.9);
-}
+.sl-depth { box-shadow: 8px 8px 18px rgba(0,0,0,.07), -4px -4px 12px rgba(255,255,255,.96); }
+.sl-surface { border: 1px solid #ededed; background:#fff; box-shadow: 8px 8px 18px rgba(0,0,0,.045), -4px -4px 12px rgba(255,255,255,.96); }
+.sl-surface:hover { box-shadow: 11px 11px 22px rgba(0,0,0,.06), -5px -5px 14px rgba(255,255,255,.98); }
