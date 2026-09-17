@@ -1,0 +1,4 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+:root{color-scheme:light}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#f8fbfd;color:#123047;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}a{color:inherit;text-decoration:none}button,input,textarea,select{font:inherit}.glass{background:rgba(255,255,255,.72);backdrop-filter:blur(18px)}.grid-fade{background-image:linear-gradient(rgba(14,116,144,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(14,116,144,.055) 1px,transparent 1px);background-size:32px 32px}
