@@ -1,7 +1,7 @@
 'use client'
 
 import { FormEvent, useMemo, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 const steps = [
@@ -11,12 +11,12 @@ const steps = [
 ] as const
 
 export default function AuthPage() {
-  const router = useRouter(); const search = useSearchParams()
-  const next = search.get('next') || '/home'
+  const router = useRouter()
   const [mode, setMode] = useState<'signup' | 'signin'>('signup')
   const [step, setStep] = useState(1)
   const [form, setForm] = useState({ fullName: '', role: 'member', occupation: '', country: 'Sierra Leone', region: '', district: '', chiefdom: '', email: '', password: '' })
-  const [message, setMessage] = useState(''); const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(false)
   const set = (key: keyof typeof form, value: string) => setForm(v => ({ ...v, [key]: value }))
   const valid = useMemo(() => {
     if (mode === 'signin') return !!form.email && form.password.length >= 8
@@ -28,24 +28,27 @@ export default function AuthPage() {
   async function submit(e: FormEvent) {
     e.preventDefault(); setMessage('')
     if (mode === 'signup' && step < 3) { setStep(s => s + 1); return }
-    setLoading(true); const supabase = createClient()
+    setLoading(true)
+    const supabase = createClient()
+    const next = '/home'
     if (mode === 'signup') {
-      const { data, error } = await supabase.auth.signUp({ email: form.email, password: form.password, options: { data: { display_name: form.fullName, role: form.role, occupation: form.occupation, country: form.country, region: form.region, district: form.district, chiefdom: form.chiefdom } } })
+      const { data, error } = await supabase.auth.signUp({ email: form.email, password: form.password, options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=/profile/setup`, data: { display_name: form.fullName, role: form.role, occupation: form.occupation, country: form.country, region: form.region, district: form.district, chiefdom: form.chiefdom } } })
       setLoading(false)
       if (error) return setMessage(error.message)
-      if (!data.session) { setMessage('Check your email to verify your account. After verification, you will return here to finish your profile.'); setMode('signin'); setStep(1); return }
-      router.push('/profile/setup?next=' + encodeURIComponent(next)); return
+      if (!data.session) { setMessage('Check your SLorigins verification email. After verification, you will be returned to SLorigins.'); return }
+      router.push('/profile/setup')
+      return
     }
     const { data, error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password })
     setLoading(false)
     if (error) return setMessage(error.message)
-    if (!data.user?.email_confirmed_at) return setMessage('Please verify your email before signing in.')
+    if (!data.user?.email_confirmed_at) return setMessage('Please verify your SLorigins email before signing in.')
     router.push(next); router.refresh()
   }
 
   async function google() {
     const supabase = createClient(); setMessage('')
-    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` } })
+    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/auth/callback?next=/profile/setup` } })
     if (error) setMessage(error.message)
   }
 
